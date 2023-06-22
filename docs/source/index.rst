@@ -7,6 +7,12 @@ them, instead of having the computers sitting idle when not in use. These set of
 serve as a guide for setting up AWS Batch as an executor for the Nextflow workflows developed for
 the IARPA TEI-REX project.
 
+.. important::
+
+   You are not required to set up AWS Batch to use the TEI-REX workflows. By default they will work
+   run tasks on the same computer on which you are executing the ``nextflow`` command. This guide
+   describes how to set up AWS Batch for remote cloud-based execution of the steps instead.
+
 What are executors?
 ===================
 Executors are a concept in Nextflow workflows that represent the actual computer resources that
