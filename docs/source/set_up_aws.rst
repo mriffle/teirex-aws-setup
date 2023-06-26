@@ -62,7 +62,7 @@ A custom AMI is required to run Nextflow workflows on AWS Batch. The custom AMI 
 
 
 Create IAM role for compute instances
-====================================
+=====================================
 AWS Batch compute environments are populated with Amazon ECS container instances. They run the Amazon ECS container agent locally. The Amazon ECS container agent makes calls to various AWS API operations on your behalf. Therefore, container instances that run the agent require an IAM policy and role for these services to recognize that the agent belongs to you.
 
 Follow the instructions at https://docs.aws.amazon.com/batch/latest/userguide/instance_IAM_role.html check if the role already exists. If it does not, then follow the instructions to create the IAM role. Call the IAM role `ecsInstanceRole`.
@@ -76,7 +76,7 @@ Follow the instructions at https://docs.aws.amazon.com/batch/latest/userguide/sp
 
 
 Create the Compute Environment and the Job Queue to run Nextflow workflows
-========================================================
+==========================================================================
 We will create a new compute environment which uses Amazon Elastic Compute Cloud(Amazon EC2) instances. The compute environment is where the Nextflow workflows will run.
 
 To create the compute environment, see *Create a compute environment* in https://docs.aws.amazon.com/batch/latest/userguide/getting-started-ec2.html in the AWS Batch User Guide. Refer to the following table to determine what options to select for creating the Compute Environment.
