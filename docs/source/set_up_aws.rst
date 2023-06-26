@@ -2,7 +2,7 @@
 Setup and Configure AWS Batch
 =====================================
 
-The Nextflow workflows can use AWS Batch as a compute provider. This document describes how to setup and configure AWS Batch to run these Nextflow workflows. We also provide a `Terraform configuration <http://sdfs>`_ which can be used by advanced users to automate the setup and configure AWS Batch to run Nextflow workflows.
+The Nextflow workflows can use AWS Batch as a compute provider. This document describes how to setup and configure AWS Batch to run these Nextflow workflows.
 
 AWS Batch is a managed service that allows you to run batch computing workloads on the AWS Cloud. AWS Batch automatically provisions compute resources and optimizes the workload distribution based on the quantity and scale of the workloads. AWS Batch plans, schedules, and executes the Nextflow workflows across the full range of AWS compute services and features, such as Amazon EC2 and Spot Instances.
 
@@ -60,31 +60,37 @@ A custom AMI is required to run Nextflow workflows on AWS Batch. The custom AMI 
         unzip awscliv2.zip
         sudo ./aws/install
 
-4. Create an AMI from the EC2 instance
+
+Create IAM role for compute instances
+====================================
+AWS Batch compute environments are populated with Amazon ECS container instances. They run the Amazon ECS container agent locally. The Amazon ECS container agent makes calls to various AWS API operations on your behalf. Therefore, container instances that run the agent require an IAM policy and role for these services to recognize that the agent belongs to you.
+
+Follow the instructions at https://docs.aws.amazon.com/batch/latest/userguide/instance_IAM_role.html check if the role already exists. If it does not, then follow the instructions to create the IAM role. Call the IAM role `ecsInstanceRole`.
 
 
-Create IAM roles for Spot fleet role
+Create IAM role for Spot instances
 ====================================
 MacCoss Lab used Amazon EC2 Spot Instances to run the Nextflow workflows. This reduces the cost by 50-70%. To use Spot Instances, you must create an IAM role that allows AWS Batch to launch Spot Instances on your behalf.
 
-Follow the instructions at https://docs.aws.amazon.com/batch/latest/userguide/spot_fleet_IAM_role.html to create a security group(s) required for AWS Batch.
+Follow the instructions at https://docs.aws.amazon.com/batch/latest/userguide/spot_fleet_IAM_role.html to create the IAM role. 
 
 
-Create the Compute Environment to run Nextflow workflows
+Create the Compute Environment and the Job Queue to run Nextflow workflows
 ========================================================
 We will create a new compute environment which uses Amazon Elastic Compute Cloud(Amazon EC2) instances. The compute environment is where the Nextflow workflows will run.
 
-To create the compute environment, see *Create a compute environment* in https://docs.aws.amazon.com/batch/latest/userguide/getting-started-ec2.html in the AWS Batch User Guide. Refer to the following table to determine what options to select.
+To create the compute environment, see *Create a compute environment* in https://docs.aws.amazon.com/batch/latest/userguide/getting-started-ec2.html in the AWS Batch User Guide. Refer to the following table to determine what options to select for creating the Compute Environment.
 
 =====================================  ============
 Option                                 Value
 =====================================  ============
-Instance Role                          Use the instance role created for you
+Instance Role                          Use the instance role, you created, named `ecsInstanceRole`
 Add a Tag                              We recommend creating at least 1 Tag to help track the usage. For example, use Key='Project', Value='Nextflow'
+Use EC2 Spot instances                 Enable 
+Spot Fleet Role                        Use the Spot Fleet role you created above
 Minimum vCPUS                          Use `0`. This will allow AWS Batch to scale the compute environment to 0 instances when there are no jobs to run. This will help reduce costs.
 Desired vCPUs                          Use same value as the Minimum vCPUs
 Maximum vCPUS                          MacCoss Lab used `640`. This will allow AWS Batch to scale the compute environment to use up to 640 vCPUs when there are jobs to run 
-Spot Fleet Role                        Use the Spot Fleet role you created above
 Allowed instance types                 MacCoss Lab used the following instance types: `"r6a.large", "r6a.xlarge", "c6a.8xlarge", "r6a.4xlarge"`
 EC2 key pair                           Use the key pair you created above
 Allocation strategy                    Use `BEST_FIT_PROGRESSIVE`
@@ -94,22 +100,24 @@ Network - VPC Configuration            Use the VPC you created above
 Network - Security groups              Use the Security group you created above
 =====================================  ============
 
+On the "Create a job queue" page, refer to the following table to determine what options to select for creating the Job Queue.
+
+Job Queue settings 
+=====================================  ============
+Option                                 Value
+=====================================  ============
+Name                                   Use the same name as the compute environment
+Priority                               MacCoss Lab used `50`
+=====================================  ============
+
+On the Create a Job Definition page, select all the defaults and click `Next`.
+
+On the Create a Job page, select all the defaults and click `Next`.
+
+Click on the `Create` button to create the compute environment and the job queue.
+
 **Note**: The compute environment will take a few minutes to be created. You can check the status of the compute environment in the AWS Batch console. The compute environment is ready when the status is `VALID`.
 
-
-Create the Job Queue to be used by Nextflow workflows
-=====================================================
-A job queue stores your submitted jobs until the AWS Batch Scheduler runs the job on a resource in your compute environment.
-
-In the Job queue configuration section for Name, specify a unique name for your compute environment: 
-
-- The name can be up to 128 characters in length
-- It can contain uppercase and lowercase letters, numbers, hyphens (-), and underscores (_)
-- MacCoss Lab used `nextflow_basic_ec2`
-
-For Priority, enter an integer between 0 and 100 for the job queue.
-
-- MacCoss Lab used `50`
 
 
 Enable CloudWatch Logs with AWS Batch
@@ -120,11 +128,7 @@ Add a CloudWatch Logs IAM policy
 --------------------------------
 Follow the instructions at https://docs.aws.amazon.com/batch/latest/userguide/using_cloudwatch_logs.html#cwl_iam_policy to add a CloudWatch Logs IAM policy. 
 
-In the instructions, you will be asked to add the new policy to the IAM role used by AWS Batch (called the `ecsInstanceRole`). **TODO** add the name of the role here. Find after testing.
-
-Create AWS Cloud Watch Log Group for Nextflow workflows
--------------------------------------------------------
-**TODO**: this might not be needed. I think AWS Batch creates this automatically. Need to test.
+In the instructions, you will be asked to add the new policy to the IAM role used by AWS Batch. This is the IAM role created in the *IAM role for compute instances* section above.
 
 
 Make S3 bucket 
@@ -196,8 +200,7 @@ An example policy is below
 
 - where `<bucket-name>` is the name of the S3 bucket you created above.
 
-Add the new policy to the IAM role(s) used by AWS Batch (called the `ecsInstanceRole`). 
-**TODO** add the name of the role here. Find after testing.
+Add the new policy to the IAM role used by AWS Batch. This is the IAM role created in the *IAM role for compute instances* section above.
 
 
 Create IAM Users for users submitting Nextflow workflows
