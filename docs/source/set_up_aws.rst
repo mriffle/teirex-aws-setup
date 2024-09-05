@@ -149,7 +149,7 @@ Tags                                    We recommend creating at least 1 Tag to 
 
 IAM Policy to enable read/write access to the S3 bucket
 -------------------------------------------------------
-Create a new IAM policy to allow read/write access to the S3 bucket. This policy will be used by the AWS Batch IAM roles and by the IAM users submitting Nextflow workflows.
+Create a new IAM policy to allow read/write access to the S3 bucket. This policy will be used by the AWS Batch IAM roles and by the IAM users submitting Nextflow workflows. This policy also includes permissions to read secret values from AWS Secrets Manager.
 
 An example policy is below
 
@@ -201,6 +201,82 @@ An example policy is below
 - where `<bucket-name>` is the name of the S3 bucket you created above.
 
 Add the new policy to the IAM role used by AWS Batch. This is the IAM role created in the *IAM role for compute instances* section above.
+
+
+Enable using secrets in AWS Secret Manager
+==========================================
+The Nextflow workflows may use the AWS Secrets Manager to store and retrieve secrets. To enable this, you will need to create two IAM policies. These will allow for the creation/management of secrets and for reading the secret value.
+
+Create IAM Policy to enable reading the secrets
+-----------------------------------------------
+Create a new IAM policy to allow the AWS Batch instances to read the secrets created when running the Nextflow workflows.
+
+An example policy is below
+
+.. code::
+
+    {
+        "Statement": [
+            {
+                "Effect":"Allow",
+                "Action":[
+                    "secretsmanager:GetSecretValue",
+                ],
+                "Resource": [
+                    "arn:aws:secretsmanager:<aws-region>:<aws-account>:secret:NF_*"
+                ]
+            }
+        ],
+        "Version": "2012-10-17"
+    }
+
+where 
+
+- `<aws-region>` is the name of the aws-region where your AWS resources are located
+- `<aws-account>` is the AWS account number
+
+Add the new policy to the IAM role used by AWS Batch. This is the IAM role created in the *IAM role for compute instances* section above.
+
+
+Create IAM Policy to enable creating and managing the secrets
+-------------------------------------------------------------
+Create a new IAM policy to allow IAM users to create and manage secrets in AWS Secrets Manager.
+
+An example policy is below
+
+.. code::
+
+    {
+        "Statement": [
+            {
+                "Sid": "EnableAccessToSecrets",
+                "Effect": "Allow",
+                "Action": [
+                    "secretsmanager:GetSecretValue",
+                    "secretsmanager:CreateSecret",
+                    "secretsmanager:DeleteSecret",
+                    "secretsmanager:DescribeSecret",
+                    "secretsmanager:PutSecretValue",
+                    "secretsmanager:UpdateSecret"
+                ],
+                "Resource": "arn:aws:secretsmanager:<aws-region>:<aws-account>:secret:NF_${aws:username}_*"
+            },
+            {
+                "Sid": "EnableListingSecrets",
+                "Effect": "Allow",
+                "Action": [
+                    "secretsmanager:ListSecrets"
+                ],
+                "Resource": "*"
+            }
+        ],
+        "Version": "2012-10-17"
+    }
+
+where
+
+- `<aws-region>` is the name of the aws-region where your AWS resources are located
+- `<aws-account>` is the AWS account number
 
 
 Create IAM Users for users submitting Nextflow workflows
@@ -284,7 +360,7 @@ When creating the IAM user, you will be asked to add permissions:
 
 - Add the IAM policy created in the *Create IAM Policy to enable running AWS Batch jobs* section above
 - Add the IAM policy created in the *IAM Policy to enable read/write access to the S3 bucket* section above
-
+- Add the IAM policy created in the *Create IAM Policy to enable creating and managing the secrets* section above
 
 Next steps
 ==========
