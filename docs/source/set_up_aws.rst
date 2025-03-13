@@ -21,7 +21,7 @@ Before you begin, you will need the following to be configured and available:
 
 Setup the Required AWS Services and resources
 =============================================
-The following AWS services and resources are required to run Nextflow workflows on AWS Batch. 
+The following AWS services and resources are required to run Nextflow workflows on AWS Batch.
 
 Create a key pair
 -----------------
@@ -31,7 +31,7 @@ To create the key pair, follow the instructions at https://docs.aws.amazon.com/b
 
 Create a VPC
 ------------
-With Amazon Virtual Private Cloud (Amazon VPC), you can launch AWS resources into a virtual network that you've defined. 
+With Amazon Virtual Private Cloud (Amazon VPC), you can launch AWS resources into a virtual network that you've defined.
 
 If you have an existing VPC, you can use that and skip to the next step. Otherwise, follow the instructions at https://docs.aws.amazon.com/batch/latest/userguide/get-set-up-for-aws-batch.html#create-a-vpc to create a VPC.
 
@@ -46,7 +46,7 @@ Follow the instructions at https://docs.aws.amazon.com/batch/latest/userguide/ge
 
 Create an Custom AMI
 =====================================
-A custom AMI is required to run Nextflow workflows on AWS Batch. The custom AMI is based on the Amazon ECS-optimized Amazon Linux 2 AMI. The custom AMI requires the AWScli to be installed. To create the custom AMI, you will need to 
+A custom AMI is required to run Nextflow workflows on AWS Batch. The custom AMI is based on the Amazon ECS-optimized Amazon Linux 2 AMI. The custom AMI requires the AWScli to be installed. To create the custom AMI, you will need to
 
 1. Create an EC2 instance using the latest version of the "Amazon ECS-optimized Amazon Linux 2" AMI which you be found in the AWS Marketplace.
 2. Connect to the EC2 instance using SSH
@@ -72,7 +72,7 @@ Create IAM role for Spot instances
 ====================================
 MacCoss Lab used Amazon EC2 Spot Instances to run the Nextflow workflows. This reduces the cost by 50-70%. To use Spot Instances, you must create an IAM role that allows AWS Batch to launch Spot Instances on your behalf.
 
-Follow the instructions at https://docs.aws.amazon.com/batch/latest/userguide/spot_fleet_IAM_role.html to create the IAM role. 
+Follow the instructions at https://docs.aws.amazon.com/batch/latest/userguide/spot_fleet_IAM_role.html to create the IAM role.
 
 
 Create the Compute Environment and the Job Queue to run Nextflow workflows
@@ -86,11 +86,11 @@ Option                                 Value
 =====================================  ============
 Instance Role                          Use the instance role, you created, named `ecsInstanceRole`
 Add a Tag                              We recommend creating at least 1 Tag to help track the usage. For example, use Key='Project', Value='Nextflow'
-Use EC2 Spot instances                 Enable 
+Use EC2 Spot instances                 Enable
 Spot Fleet Role                        Use the Spot Fleet role you created above
 Minimum vCPUS                          Use `0`. This will allow AWS Batch to scale the compute environment to 0 instances when there are no jobs to run. This will help reduce costs.
 Desired vCPUs                          Use same value as the Minimum vCPUs
-Maximum vCPUS                          MacCoss Lab used `640`. This will allow AWS Batch to scale the compute environment to use up to 640 vCPUs when there are jobs to run 
+Maximum vCPUS                          MacCoss Lab used `640`. This will allow AWS Batch to scale the compute environment to use up to 640 vCPUs when there are jobs to run
 Allowed instance types                 MacCoss Lab used the following instance types: `"r6a.large", "r6a.xlarge", "c6a.8xlarge", "r6a.4xlarge"`
 EC2 key pair                           Use the key pair you created above
 Allocation strategy                    Use `BEST_FIT_PROGRESSIVE`
@@ -102,7 +102,7 @@ Network - Security groups              Use the Security group you created above
 
 On the "Create a job queue" page, refer to the following table to determine what options to select for creating the Job Queue.
 
-Job Queue settings 
+Job Queue settings
 =====================================  ============
 Option                                 Value
 =====================================  ============
@@ -126,12 +126,13 @@ You can configure your AWS Batch jobs (ie Nextflow workflows) to send detailed l
 
 Add a CloudWatch Logs IAM policy
 --------------------------------
-Follow the instructions at https://docs.aws.amazon.com/batch/latest/userguide/using_cloudwatch_logs.html#cwl_iam_policy to add a CloudWatch Logs IAM policy. 
+Follow the instructions at https://docs.aws.amazon.com/batch/latest/userguide/using_cloudwatch_logs.html#cwl_iam_policy to add a CloudWatch Logs IAM policy.
 
 In the instructions, you will be asked to add the new policy to the IAM role used by AWS Batch. This is the IAM role created in the *IAM role for compute instances* section above.
 
+Once you have created the IAM policy you should also go to CloudWatch and create a Log Group that will be needed for the configuration of the workflow run.
 
-Make S3 bucket 
+Make S3 bucket
 ==============
 Create a new S3 bucket to store the Nextflow workflow files and results. To create the S3 bucket, see *Creating a bucket* in https://docs.aws.amazon.com/AmazonS3/latest/userguide/creating-bucket.html. Refer to the following table to determine what options to select.
 
@@ -219,18 +220,14 @@ An example policy is below
         "Statement": [
             {
                 "Effect":"Allow",
-                "Action":[
-                    "secretsmanager:GetSecretValue",
-                ],
-                "Resource": [
-                    "arn:aws:secretsmanager:<aws-region>:<aws-account>:secret:NF_*"
-                ]
+                "Action": "secretsmanager:GetSecretValue",
+                "Resource": "arn:aws:secretsmanager:<aws-region>:<aws-account>:secret:NF_*"
             }
         ],
         "Version": "2012-10-17"
     }
 
-where 
+where
 
 - `<aws-region>` is the name of the aws-region where your AWS resources are located
 - `<aws-account>` is the AWS account number
@@ -284,7 +281,7 @@ Create IAM Users for users submitting Nextflow workflows
 
 Create IAM Policy to enable running AWS Batch jobs
 --------------------------------------------------
-Create a new IAM policy to allow IAM users to submit AWS Batch jobs. 
+Create a new IAM policy to allow IAM users to submit AWS Batch jobs.
 
 An example policy is below:
 
@@ -350,13 +347,13 @@ An example policy is below:
     }
 
 
-Create IAM Users 
+Create IAM Users
 ----------------
 Create a new IAM user for each user who will be submitting Nextflow workflows. If the users already have an IAM user, you can use that IAM user and skip the instructions for creating the user. Ideally the IAM user should have both programmatic and console access.
 
 Follow the instructions to create an IAM user at https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html
 
-When creating the IAM user, you will be asked to add permissions: 
+When creating the IAM user, you will be asked to add permissions:
 
 - Add the IAM policy created in the *Create IAM Policy to enable running AWS Batch jobs* section above
 - Add the IAM policy created in the *IAM Policy to enable read/write access to the S3 bucket* section above
