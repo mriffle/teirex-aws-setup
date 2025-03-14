@@ -132,6 +132,12 @@ In the instructions, you will be asked to add the new policy to the IAM role use
 
 Once you have created the IAM policy you should also go to CloudWatch and create a Log Group that will be needed for the configuration of the workflow run.
 
+Create a Log Group in CloudWatch
+--------------------------------
+Follow the instructions at https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html#CreateLogGroup to create a Log Group in CloudWatch. The logs groups name should be the same as the compute environment name you created above.
+
+We recommend that you configure the logs retention policy to clean up older logs that are no longer needed.
+
 Make S3 bucket
 ==============
 Create a new S3 bucket to store the Nextflow workflow files and results. To create the S3 bucket, see *Creating a bucket* in https://docs.aws.amazon.com/AmazonS3/latest/userguide/creating-bucket.html. Refer to the following table to determine what options to select.
